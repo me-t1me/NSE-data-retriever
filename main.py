@@ -6,7 +6,6 @@ import pandas as pd
 from tkinter import *
 import sys 
 
-
 # * GUi 
 window = Tk()
 title = window.title("NSE data retriever")
@@ -90,6 +89,7 @@ window.mainloop()
 type =l3_text.get()
 startdate = date(int(l1_text.get()[0:4]),int(l1_text.get()[5:7]),int(l1_text.get()[8:10]))
 lastmon = int(l2_text.get()[5:7])
+lastyear = int(l2_text.get()[0:4])
 futures = l6_text.get()
 name = l4_text.get()
 companyname = l5_text.get()
@@ -107,9 +107,17 @@ def last_day_of_month(any_day):
 
 def exdate(month,year):
     if month >= 13 :
-            month = month - 12
-            year = year + 1
-    today = last_day_of_month(date(year,month,1))
+        if (int(month%12) == 0):
+            year = year + int(month/12) - 1
+        else:    
+            year = year + int(month/12)
+    if (int(month/12) == 0):
+        today = last_day_of_month(date(year,month%(12),1))
+    else :
+        if ((month%(12*int(month/12)) )== 0) :
+            today = last_day_of_month(date(year, month%(12*int(month/12)) + 12 ,1))
+        else:
+            today = last_day_of_month(date(year, month%(12*int(month/12)) ,1))
     idx = today.isoweekday() - 4
     if idx < 0 :
       idx = idx + 7
@@ -118,7 +126,7 @@ def exdate(month,year):
 
 
 def datestart (month,year):
-    if month == 3: 
+    if month == startdate.month: 
       stt = startdate 
     else :
         if month == 1 :
@@ -137,7 +145,7 @@ if (futures == 1):
                     expiry_date = exdate(startdate.month + type,startdate.year)
                     )
     if type == 0:
-        for i in range(startdate.month + 1, 13 + lastmon):
+        for i in range(startdate.month + 1, (lastyear - startdate.year)*12 + 1+ lastmon):
             sbin1 = get_history(symbol=companyname,
                     start=datestart(i,startdate.year),
                     end=exdate(i,startdate.year),
@@ -145,7 +153,7 @@ if (futures == 1):
                     expiry_date = exdate(i+type,startdate.year))
             total = pd.concat([total , sbin1])
     elif type == 1:
-        for i in range(startdate.month + 1 , 12 + lastmon):
+        for i in range(startdate.month + 1 , (lastyear - startdate.year)*12 + lastmon):
             sbin1 = get_history(symbol=companyname,
                     start=datestart(i,startdate.year),
                     end=exdate(i,startdate.year),
@@ -153,7 +161,7 @@ if (futures == 1):
                     expiry_date = exdate(i+type,startdate.year))
             total = pd.concat([total , sbin1])
     elif type == 2:
-        for i in range(startdate.month + 1, 11 + lastmon):
+        for i in range(startdate.month + 1, (lastyear - startdate.year)*12 - 1+ lastmon):
             sbin1 = get_history(symbol=companyname,
                     start=datestart(i,startdate.year),
                     end=exdate(i,startdate.year),
@@ -168,7 +176,7 @@ else:
                     series = "EQ",
                     expiry_date = exdate(startdate.month + type,startdate.year)
                     )
-    for i in range(startdate.month + 1, 13 + lastmon):
+    for i in range(startdate.month + 1, (lastyear - startdate.year)*12 +1+ lastmon):
         sbin1 = get_history(symbol=companyname,
                 start=datestart(i,startdate.year),
                 end=exdate(i,startdate.year),
@@ -178,6 +186,7 @@ else:
 
 
 total.to_excel(name + ".xlsx")
+
 
 # * main function ends
 
