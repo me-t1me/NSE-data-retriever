@@ -18,14 +18,17 @@ l1.grid(row = 0 , column = 0)
 l1 = Label(window , text = "End Date")
 l1.grid(row = 1 , column = 0)
 
-l1 = Label(window , text = "Type")
+l1 = Label(window , text = "Product Type")
 l1.grid(row = 2 , column = 0)
 
-l1 = Label(window , text = "Name of file")
+l1 = Label(window , text = "Type")
 l1.grid(row = 3 , column = 0)
 
-l1 = Label(window , text = "Company Name")
+l1 = Label(window , text = "Name of file")
 l1.grid(row = 4 , column = 0)
+
+l1 = Label(window , text = "Company Name")
+l1.grid(row = 5 , column = 0)
 
 l1 = Label(window , text = "(YYYY-MM-DD)")
 l1.grid(row = 0 , column = 2)
@@ -33,20 +36,23 @@ l1.grid(row = 0 , column = 2)
 l1 = Label(window , text = "(YYYY-MM-DD)")
 l1.grid(row = 1, column = 2)
 
-l1 = Label(window , text = "0 = current month, 1 = near month, 2=far month")
+l1 = Label(window , text = "Equity = 0 , Futures = 1")
 l1.grid(row = 2 , column = 2)
 
-l1 = Label(window , text = "ex - current")
+l1 = Label(window , text = "0 = current month, 1 = near month, 2=far month")
 l1.grid(row = 3 , column = 2)
 
-l1 = Label(window , text = "ex - BOSCHLTD")
+l1 = Label(window , text = "ex - current")
 l1.grid(row = 4 , column = 2)
 
+l1 = Label(window , text = "ex - BOSCHLTD")
+l1.grid(row = 5, column = 2)
+
 l1 = Label(window , text = "close program to generate file" )
-l1.grid(row = 5 , column = 1)
+l1.grid(row = 6 , column = 1)
 
 l1 = Label(window , text = "File will be created in folder where NSE data retriever.exe file is located")
-l1.grid(row = 6 , column = 0)
+l1.grid(row = 7 , column = 0)
 # * lebals ends
 
 # * entry field
@@ -58,17 +64,21 @@ l2_text = StringVar()
 el2 = Entry(window , textvariable=l2_text)
 el2.grid(row=1 , column = 1)
 
+l6_text = IntVar()
+el1 = Entry(window , textvariable=l6_text)
+el1.grid(row=2 , column = 1)
+
 l3_text = IntVar()
 el3 = Entry(window , textvariable=l3_text)
-el3.grid(row=2 , column = 1)
+el3.grid(row=3 , column = 1)
 
 l4_text = StringVar()
 el4 = Entry(window , textvariable=l4_text)
-el4.grid(row=3 , column = 1)
+el4.grid(row=4 , column = 1)
 
 l5_text = StringVar()
 el5 = Entry(window , textvariable=l5_text)
-el5.grid(row=4 , column = 1)
+el5.grid(row=5 , column = 1)
 # * entry field ends
 
 window.mainloop()
@@ -80,6 +90,7 @@ window.mainloop()
 type =l3_text.get()
 startdate = date(int(l1_text.get()[0:4]),int(l1_text.get()[5:7]),int(l1_text.get()[8:10]))
 lastmon = int(l2_text.get()[5:7])
+futures = l6_text.get()
 name = l4_text.get()
 companyname = l5_text.get()
 # * input end 
@@ -116,37 +127,55 @@ def datestart (month,year):
         stt = exdate(month - 1,year) + datetime.timedelta(days=1)
     return stt
 
-total = get_history(
-                   symbol=companyname,
-                   start=datestart(startdate.month,startdate.year),
-                   end=exdate(startdate.month,startdate.year),
-                   futures=True,
-                   expiry_date = exdate(startdate.month + type,startdate.year)
-                   )
-if type == 0:
+
+if (futures == 1):
+    total = get_history(
+                    symbol=companyname,
+                    start=datestart(startdate.month,startdate.year),
+                    end=exdate(startdate.month,startdate.year),
+                    futures=True,
+                    expiry_date = exdate(startdate.month + type,startdate.year)
+                    )
+    if type == 0:
+        for i in range(startdate.month + 1, 13 + lastmon):
+            sbin1 = get_history(symbol=companyname,
+                    start=datestart(i,startdate.year),
+                    end=exdate(i,startdate.year),
+                    futures=True,
+                    expiry_date = exdate(i+type,startdate.year))
+            total = pd.concat([total , sbin1])
+    elif type == 1:
+        for i in range(startdate.month + 1 , 12 + lastmon):
+            sbin1 = get_history(symbol=companyname,
+                    start=datestart(i,startdate.year),
+                    end=exdate(i,startdate.year),
+                    futures=True,
+                    expiry_date = exdate(i+type,startdate.year))
+            total = pd.concat([total , sbin1])
+    elif type == 2:
+        for i in range(startdate.month + 1, 11 + lastmon):
+            sbin1 = get_history(symbol=companyname,
+                    start=datestart(i,startdate.year),
+                    end=exdate(i,startdate.year),
+                    futures=True,
+                    expiry_date = exdate(i+type,startdate.year))
+            total = pd.concat([total , sbin1])
+else:
+    total = get_history(
+                    symbol=companyname,
+                    start=datestart(startdate.month,startdate.year),
+                    end=exdate(startdate.month,startdate.year),
+                    series = "EQ",
+                    expiry_date = exdate(startdate.month + type,startdate.year)
+                    )
     for i in range(startdate.month + 1, 13 + lastmon):
         sbin1 = get_history(symbol=companyname,
-                   start=datestart(i,startdate.year),
-                   end=exdate(i,startdate.year),
-                   futures=True,
-                   expiry_date = exdate(i+type,startdate.year))
+                start=datestart(i,startdate.year),
+                end=exdate(i,startdate.year),
+                series = "EQ",
+                expiry_date = exdate(i,startdate.year))
         total = pd.concat([total , sbin1])
-elif type == 1:
-    for i in range(startdate.month + 1 , 12 + lastmon):
-        sbin1 = get_history(symbol=companyname,
-                   start=datestart(i,startdate.year),
-                   end=exdate(i,startdate.year),
-                   futures=True,
-                   expiry_date = exdate(i+type,startdate.year))
-        total = pd.concat([total , sbin1])
-elif type == 2:
-    for i in range(startdate.month + 1, 11 + lastmon):
-        sbin1 = get_history(symbol=companyname,
-                   start=datestart(i,startdate.year),
-                   end=exdate(i,startdate.year),
-                   futures=True,
-                   expiry_date = exdate(i+type,startdate.year))
-        total = pd.concat([total , sbin1])
+
 
 total.to_excel(name + ".xlsx")
 
